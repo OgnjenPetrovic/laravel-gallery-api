@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Gallery;
 use Validator;
@@ -16,7 +17,9 @@ class GalleryController extends Controller
      */
     public function index()
     {
-        return Gallery::with('images')->with('comments')->with('author')->get();
+//        return Gallery::search(request('term', ''), request('take', 10), request('skip', 0));
+        return Gallery::search(request('term', ''), request('take', 10), request('skip', 0));
+        return Gallery::with(['images', 'user'])->get();
     }
 
     /**
@@ -26,7 +29,7 @@ class GalleryController extends Controller
      */
     public function create()
     {
-    
+        //
     }
 
     /**
@@ -37,34 +40,26 @@ class GalleryController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->json()->all();
-
-
-        $validation = Validator::make($input, [
+        $validation = Validator::make($request->all(), [
             'name' => 'required|min:2|max:255',
             'description' => 'required|max:1000',
             'images' => 'required|array|min:1',
-            'images.*.url' => 'required|url'
+            'images.*' => 'required|url'
         ]);
-
-
 
         if ($validation->fails()) {
              return $validation->errors();
         }
 
         $gallery = new Gallery;
-        $gallery->name = $input['name'];
-        $gallery->description = $input['description'];
-        $gallery->user_id = 3;
-        $gallery->save();   
+        $gallery->name = $request->name;
+        $gallery->description = $request->description;
+        $gallery->user_id = 1;
+        $gallery->save();
 
-        $images = $input->images;
-        foreach ($images as $image) {
-           $gallery->images()->save($image);
-        }
+        $gallery->addImages($request->images);
 
-        return $gallery;
+        return $gallery->with('images')->whereId($gallery->id)->get();
     }
 
     /**
@@ -75,7 +70,7 @@ class GalleryController extends Controller
      */
     public function show($id)
     {
-        //
+        return Gallery::with(['images', 'comments', 'user'])->whereId($id)->first();
     }
 
     /**
@@ -98,7 +93,28 @@ class GalleryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $gallery = Gallery::findOrFail($id);
+
+        $validation = Validator::make($request->all(), [
+            'name' => 'required|min:2|max:255',
+            'description' => 'required|max:1000',
+            'images' => 'required|array|min:1',
+            'images.*' => 'required|url'
+        ]);
+
+        if ($validation->fails()) {
+            return $validation->errors();
+        }
+
+        $gallery->name = $request->name;
+        $gallery->description = $request->description;
+        $gallery->user_id = 1;
+
+        $gallery->deleteImages();
+
+        $gallery->addImages($request->images);
+
+        return $gallery->with('images')->whereId($id)->get();
     }
 
     /**
@@ -109,6 +125,9 @@ class GalleryController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $gallery = Gallery::find($id);
+        $gallery->delete();
+
+        return new JsonResponse('Gallery successfully deleted');
     }
 }
