@@ -9,8 +9,8 @@ use App\User;
 
 class RegisterController extends Controller
 {
-    public function register(Request $request) {
-
+    public function register(Request $request)
+    {
     	$validation = Validator::make($request->all(), [
     		'first_name' => 'required',
     		'last_name' => 'required',
