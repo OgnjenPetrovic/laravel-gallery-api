@@ -17,9 +17,7 @@ class GalleryController extends Controller
      */
     public function index()
     {
-//        return Gallery::search(request('term', ''), request('take', 10), request('skip', 0));
         return Gallery::search(request('term', ''), request('take', 10), request('skip', 0));
-        return Gallery::with(['images', 'user'])->get();
     }
 
     /**
@@ -40,12 +38,7 @@ class GalleryController extends Controller
      */
     public function store(Request $request)
     {
-        $validation = Validator::make($request->all(), [
-            'name' => 'required|min:2|max:255',
-            'description' => 'required|max:1000',
-            'images' => 'required|array|min:1',
-            'images.*' => 'required|url'
-        ]);
+        $validation = Validator::make($request->all(), Gallery::validationRules());
 
         if ($validation->fails()) {
              return $validation->errors();
@@ -95,12 +88,7 @@ class GalleryController extends Controller
     {
         $gallery = Gallery::findOrFail($id);
 
-        $validation = Validator::make($request->all(), [
-            'name' => 'required|min:2|max:255',
-            'description' => 'required|max:1000',
-            'images' => 'required|array|min:1',
-            'images.*' => 'required|url'
-        ]);
+        $validation = Validator::make($request->all(),  Gallery::validationRules());
 
         if ($validation->fails()) {
             return $validation->errors();

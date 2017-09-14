@@ -13,17 +13,18 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+//Route::middleware('auth:api')->get('/user', function (Request $request) {
+//    return $request->user();
+//});
 
 Route::post('register', 'ApiAuth\RegisterController@register');
+Route::post('/login', 'Auth\LoginController@authenticate');
 
-Route::get('galleries', 'GalleryController@index');
-Route::post('galleries', 'GalleryController@store');
-Route::post('galleries/{id}', 'GalleryController@update');
-Route::get('galleries/{id}', 'GalleryController@show');
-Route::delete('galleries/{id}', 'GalleryController@destroy');
+Route::middleware('jwt')->get('/galleries', 'GalleryController@index');
+Route::middleware('jwt')->post('/galleries', 'GalleryController@store');
+Route::middleware('jwt')->post('/galleries/{id}', 'GalleryController@update');
+Route::middleware('jwt')->get('/galleries/{id}', 'GalleryController@show');
+Route::middleware('jwt')->delete('/galleries/{id}', 'GalleryController@destroy');
 
-Route::post('comments', 'CommentController@store');
-Route::delete('comments/{id}', 'CommentController@destroy');
+Route::middleware('jwt')->post('/comments', 'CommentController@store');
+Route::middleware('jwt')->delete('/comments/{id}', 'CommentController@destroy');

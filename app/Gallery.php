@@ -9,7 +9,7 @@ use App\User;
 
 class Gallery extends Model
 {
-    public function images() 
+    public function images()
     {
     	return $this->hasMany(Image::class);
     }
@@ -47,5 +47,15 @@ class Gallery extends Model
             ->orWhere('users.first_name', 'like', '%' . $term . '%')
             ->orWhere('users.last_name', 'like', '%' . $term . '%')
             ->skip($skip)->take($take)->get();
+    }
+
+    public static function validationRules()
+    {
+        return [
+            'name' => 'required|min:2|max:255',
+            'description' => 'required|max:1000',
+            'images' => 'required|array|min:1',
+            'images.*' => 'required|url'
+        ];
     }
 }
