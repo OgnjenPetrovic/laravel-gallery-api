@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\GalleryRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Gallery;
+use Tymon\JWTAuth\Contracts\Providers\Auth;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Validator;
-use App\Image;
 
 class GalleryController extends Controller
 {
@@ -17,7 +19,7 @@ class GalleryController extends Controller
      */
     public function index()
     {
-        return Gallery::search(request('term', ''), request('take', 10), request('skip', 0));
+        return Gallery::search(request('term', ''), request('take', 10), request('skip', 0), request('auth-user'));
     }
 
     /**
@@ -36,18 +38,12 @@ class GalleryController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(GalleryRequest $request)
     {
-        $validation = Validator::make($request->all(), Gallery::validationRules());
-
-        if ($validation->fails()) {
-             return $validation->errors();
-        }
-
         $gallery = new Gallery;
         $gallery->name = $request->name;
         $gallery->description = $request->description;
-        $gallery->user_id = 1;
+        $gallery->user_id = JWTAuth::parseToken()->authenticate()->id;
         $gallery->save();
 
         $gallery->addImages($request->images);
@@ -84,19 +80,13 @@ class GalleryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(GalleryRequest $request, $id)
     {
         $gallery = Gallery::findOrFail($id);
 
-        $validation = Validator::make($request->all(),  Gallery::validationRules());
-
-        if ($validation->fails()) {
-            return $validation->errors();
-        }
-
         $gallery->name = $request->name;
         $gallery->description = $request->description;
-        $gallery->user_id = 1;
+        $gallery->user_id = JWTAuth::parseToken()->authenticate()->id;
 
         $gallery->deleteImages();
 
